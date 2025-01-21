@@ -37,3 +37,12 @@ export const LanguagePicker = ({ onLanguageChange }: Props) => {
         </div>
     );
 };
+
+// Turn off the console log
+// console.log(
+//     Object.entries(supportedLngs).map(([code, details]) => ({
+//         key: code,
+//         text: details.name,
+//         data: code
+//     }))
+// );

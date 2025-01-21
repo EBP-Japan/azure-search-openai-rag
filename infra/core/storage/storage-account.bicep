@@ -16,7 +16,8 @@ param defaultToOAuthAuthentication bool = false
 param deleteRetentionPolicy object = {}
 @allowed([ 'AzureDnsZone', 'Standard' ])
 param dnsEndpointType string = 'Standard'
-param isHnsEnabled bool = false
+// param isHnsEnabled bool = false # original
+param isHnsEnabled bool = true
 param kind string = 'StorageV2'
 param minimumTlsVersion string = 'TLS1_2'
 param supportsHttpsTrafficOnly bool = true
@@ -60,6 +61,7 @@ resource storage 'Microsoft.Storage/storageAccounts@2022-05-01' = {
       name: container.name
       properties: {
         publicAccess: contains(container, 'publicAccess') ? container.publicAccess : 'None'
+        // publicAccess: container.?publicAccess ?? 'None'
       }
     }]
   }

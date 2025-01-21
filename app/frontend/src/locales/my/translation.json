@@ -1,16 +1,16 @@
 {
-    "pageTitle": "EBP Chatbot with RAG Using Azure + OpenAI",
+    "pageTitle": "Azure + OpenAI ကို အသုံးပြု၍ RAG သုံးထားသည့် EBP Chatbot",
     "headerTitle": "Evidence Based Policy .Ltd",
     "chat": "Chat",
-    "qa": "Ask a question",
+    "qa": "မေးခွန်းမေးရန်",
     "login": "Login",
     "logout": "Logout",
-    "clearChat": "Empty chat",
+    "clearChat": "chatကို ရှင်းလင်းရန်",
     "history": {
         "chatHistory": "Chat history",
-        "openChatHistory": "Open chat history",
-        "noHistory": "No chat history",
-        "deleteModalTitle": "Delete chat history",
+        "openChatHistory": "chat history ဖွင့်ပါ",
+        "noHistory": "chat history မရှိပါ",
+        "deleteModalTitle": "chat history ကို ဖျက်ပါ",
         "deleteModalDescription": "This action cannot be undone. Delete this chat history?",
         "deleteLabel": "Delete",
         "cancelLabel": "Cancel",
@@ -34,34 +34,34 @@
     },
     "developerSettings": "Developer settings",
 
-    "chatEmptyStateTitle": "Chat with your data",
-    "chatEmptyStateSubtitle": "Ask anything or try an example",
+    "chatEmptyStateTitle": "သင့်ဒေတာနှင့် Chat လုပ်ပါ။",
+    "chatEmptyStateSubtitle": "တစ်ခုခုမေးပါ သို့မဟုတ် ဥပမာတစ်ခုစမ်းကြည့်ပါ။",
     "defaultExamples": {
-        "1": "What is included in my Northwind Health Plus plan that is not in standard?",
-        "2": "What happens in a performance review?",
-        "3": "What does a Product Manager do?",
-        "placeholder": "Type a new question (e.g. does my plan cover annual eye exams?)"
+        "1": "ကျွန်ုပ်၏ Northwind Health Plus အစီအစဉ်တွင် standard မဟုတ်သည့် မည်သည့်အရာပါဝင်သနည်း။",
+        "2": "စွမ်းဆောင်ရည် ပြန်လည်သုံးသပ်မှုတွင် ဘာတွေဖြစ်မလဲ။",
+        "3": "Product Manager က ဘာလုပ်သလဲ။",
+        "placeholder": "မေးခွန်းအသစ်ကို ရိုက်ထည့်ပါ (ဥပမာ၊ ကျွန်ုပ်၏ အစီအစဉ်သည် နှစ်စဉ် မျက်စိစစ်ဆေးမှုများ အကျုံးဝင်ပါသလား။"
     },
-    "askTitle": "Ask your data",
+    "askTitle": "မေးပါ",
     "gpt4vExamples": {
-        "1": "Compare the impact of interest rates and GDP in financial markets.",
-        "2": "What is the expected trend for the S&P 500 index over the next five years? Compare it to the past S&P 500 performance",
-        "3": "Can you identify any correlation between oil prices and stock market trends?",
-        "placeholder": "Example: Does my plan cover annual eye exams?"
+        "1": "ငွေကြေးဈေးကွက်တွင် အတိုးနှုန်းနှင့် GDP ၏အကျိုးသက်ရောက်မှုကို နှိုင်းယှဉ်ပါ။",
+        "2": "လာမည့်ငါးနှစ်အတွင်း S&P 500 အညွှန်းကိန်းအတွက် မျှော်မှန်းထားသည့်လမ်းကြောင်းမှာ အဘယ်နည်း။ ၎င်းကို ယခင် S&P 500 စွမ်းဆောင်ရည်နှင့် နှိုင်းယှဉ်ပါ။",
+        "3": "ရေနံစျေးနှုန်းနှင့် စတော့ဈေးကွက်လမ်းကြောင်းများကြား ဆက်စပ်မှုကို ဖော်ထုတ်နိုင်ပါသလား။",
+        "placeholder": "Example: ကျွန်ုပ်၏ အစီအစဉ်သည် နှစ်စဉ် မျက်စိစစ်ဆေးမှုများ အကျုံးဝင်ပါသလား။?"
     },
-    "generatingAnswer": "Generating answer",
-    "citationWithColon": "Citation:",
-    "followupQuestions": "Follow-up questions:",
+    "generatingAnswer": "အဖြေထုတ်ပေးနေပါသည်။",
+    "citationWithColon": "ကိုးကားချက်:",
+    "followupQuestions": "နောက်ဆက်တွဲမေးခွန်းများ:",
 
     "tooltips": {
-        "submitQuestion": "Submit question",
-        "askWithVoice": "Ask question with voice",
-        "stopRecording": "Stop recording question",
-        "showThoughtProcess": "Show thought process",
-        "showSupportingContent": "Show supporting content",
-        "speakAnswer": "Speak answer",
-        "info": "Info",
-        "save": "Save"
+        "submitQuestion": "မေးခွန်းမေးပါ။",
+        "askWithVoice": "အသံဖြင့် မေးခွန်းမေးပါ။",
+        "stopRecording": "အသံဖြင့် မေးခွန်းမေးမြန်းမှု့အား မှတ်တမ်းတင်ခြင်းကို ရပ်ပါ။",
+        "showThoughtProcess": "တွေးခေါ်မှုဖြစ်စဉ်ကို ပြသပါ။",
+        "showSupportingContent": "ပံ့ပိုးသောအကြောင်းအရာကိုပြသပါ။",
+        "speakAnswer": "အဖြေပြန်ပြောပါ။",
+        "info": "အချက်အလက်",
+        "save": "သိမ်းဆည်းပါ။"
     },
 
     "headerTexts":{
@@ -71,10 +71,10 @@
     },
 
     "labels": {
-        "toggleMenu": "Toggle menu",
-        "languagePicker": "Select your language",
-        "headerText": "Configure answer generation",
-        "closeButton": "Close",
+        "toggleMenu": "မီနူးကို ပြောင်းရန်",
+        "languagePicker": "သင့်ဘာသာစကားကို ရွေးချယ်ပါ။",
+        "headerText": "အဖြေထုတ်ပေးပုံကို စီစဉ်သတ်မှတ်ပါ။",
+        "closeButton": "ပိတ်သည်။",
         "promptTemplate": "Override prompt template",
         "temperature": "Temperature",
         "seed": "Seed",

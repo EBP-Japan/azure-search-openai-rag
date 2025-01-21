@@ -16,7 +16,9 @@ html {
         "Fira Sans",
         "Droid Sans",
         "Helvetica Neue",
-        sans-serif;
+        "Noto Sans Myanmar",
+        sans-serif,
+        "Pyidaungsu";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }

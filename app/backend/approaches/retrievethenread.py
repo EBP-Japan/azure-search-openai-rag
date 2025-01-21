@@ -17,24 +17,33 @@ class RetrieveThenReadApproach(Approach):
     (answer) with that prompt.
     """
 
+    # Edit here for prompt to adjust the response text (here for ask)
+    # system_chat_template = (
+    #     "You are an intelligent assistant helping Contoso Inc employees with their healthcare plan questions and employee handbook questions. "
+    #     + "Use 'you' to refer to the individual asking the questions even if they ask with 'I'. "
+    #     + "Answer the following question using only the data provided in the sources below. "
+    #     + "Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. "
+    #     + "If you cannot answer using the sources below, say you don't know. Use below example to answer"
+    # )
+
     system_chat_template = (
-        "You are an intelligent assistant helping Contoso Inc employees with their healthcare plan questions and employee handbook questions. "
-        + "Use 'you' to refer to the individual asking the questions even if they ask with 'I'. "
-        + "Answer the following question using only the data provided in the sources below. "
-        + "Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. "
-        + "If you cannot answer using the sources below, say you don't know. Use below example to answer"
+        "You are an intelligent assistant helping with questions. "
+        "Answer the following question using only the information from the uploaded files. "
+        "Each source has a name followed by its information. Always include the source name for each fact you use in the response. "
+        "If you cannot answer using the sources below, say 'I don't know'."
     )
+
 
     # shots/sample conversation
     question = """
-'What is the deductible for the employee plan for a visit to Overlake in Bellevue?'
+    'What is the deductible for the employee plan for a visit to Overlake in Bellevue?'
 
-Sources:
-info1.txt: deductibles depend on whether you are in-network or out-of-network. In-network deductibles are $500 for employee and $1000 for family. Out-of-network deductibles are $1000 for employee and $2000 for family.
-info2.pdf: Overlake is in-network for the employee plan.
-info3.pdf: Overlake is the name of the area that includes a park and ride near Bellevue.
-info4.pdf: In-network institutions include Overlake, Swedish and others in the region
-"""
+    Sources:
+    info1.txt: deductibles depend on whether you are in-network or out-of-network. In-network deductibles are $500 for employee and $1000 for family. Out-of-network deductibles are $1000 for employee and $2000 for family.
+    info2.pdf: Overlake is in-network for the employee plan.
+    info3.pdf: Overlake is the name of the area that includes a park and ride near Bellevue.
+    info4.pdf: In-network institutions include Overlake, Swedish and others in the region
+    """
     answer = "In-network deductibles are $500 for employee and $1000 for family [info1.txt] and Overlake is in-network for the employee plan [info2.pdf][info4.pdf]."
 
     def __init__(
@@ -174,3 +183,88 @@ info4.pdf: In-network institutions include Overlake, Swedish and others in the r
             "context": extra_info,
             "session_state": session_state,
         }
+
+    # async def run(
+    #     self,
+    #     messages: list[ChatCompletionMessageParam],
+    #     session_state: Any = None,
+    #     context: dict[str, Any] = {},
+    # ) -> dict[str, Any]:
+    #     q = messages[-1]["content"]
+    #     if not isinstance(q, str):
+    #         raise ValueError("The most recent message content must be a string.")
+    #     overrides = context.get("overrides", {})
+    #     uploaded_files = context.get("uploaded_files", [])  # User-uploaded files
+        
+    #     if not uploaded_files:
+    #         return {
+    #             "message": {"content": "No files uploaded. Please upload files to get a response.", "role": "assistant"},
+    #             "context": {},
+    #             "session_state": session_state,
+    #         }
+
+    #     # Construct filter to include only uploaded files
+    #     filter = self.build_filter(overrides, context.get("auth_claims", {}))
+    #     file_filter = f"{self.sourcepage_field} IN ({', '.join([f'\"{file}\"' for file in uploaded_files])})"
+    #     filter = f"({filter}) AND ({file_filter})" if filter else file_filter
+
+    #     # Search documents
+    #     results = await self.search(
+    #         top=overrides.get("top", 3),
+    #         query=q,
+    #         filter=filter,
+    #         vectors=[],
+    #         use_text_search=True,
+    #         use_vector_search=False,
+    #         use_semantic_ranker=overrides.get("semantic_ranker", False),
+    #         use_semantic_captions=overrides.get("semantic_captions", False),
+    #         minimum_search_score=overrides.get("minimum_search_score", 0.0),
+    #         minimum_reranker_score=overrides.get("minimum_reranker_score", 0.0),
+    #     )
+
+    #     # Process results
+    #     sources_content = self.get_sources_content(results, use_semantic_captions=False, use_image_citation=False)
+    #     if not sources_content:
+    #         return {
+    #             "message": {"content": "I cannot find relevant information in the uploaded files.", "role": "assistant"},
+    #             "context": {},
+    #             "session_state": session_state,
+    #         }
+
+    #     # Construct prompt
+    #     user_content = f"{q}\nSources:\n{'\n'.join(sources_content)}"
+    #     updated_messages = build_messages(
+    #         model=self.chatgpt_model,
+    #         system_prompt=overrides.get("prompt_template", self.system_chat_template),
+    #         few_shots=[{"role": "user", "content": self.question}, {"role": "assistant", "content": self.answer}],
+    #         new_user_content=user_content,
+    #         max_tokens=self.chatgpt_token_limit - 1024,
+    #         fallback_to_default=self.ALLOW_NON_GPT_MODELS,
+    #     )
+
+    #     # Generate response
+    #     chat_completion = await self.openai_client.chat.completions.create(
+    #         model=self.chatgpt_deployment or self.chatgpt_model,
+    #         messages=updated_messages,
+    #         temperature=overrides.get("temperature", 0.3),
+    #         max_tokens=1024,
+    #         n=1,
+    #         seed=overrides.get("seed"),
+    #     )
+
+    #     return {
+    #         "message": {
+    #             "content": chat_completion.choices[0].message.content,
+    #             "role": chat_completion.choices[0].message.role,
+    #         },
+    #         "context": {
+    #             "data_points": {"text": sources_content},
+    #             "thoughts": [
+    #                 ThoughtStep("Search using user query", q, {"filter": filter}),
+    #                 ThoughtStep("Search results", [result.serialize_for_results() for result in results]),
+    #                 ThoughtStep("Prompt to generate answer", updated_messages),
+    #             ],
+    #         },
+    #         "session_state": session_state,
+    #     }
+

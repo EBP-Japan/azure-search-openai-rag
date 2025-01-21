@@ -645,6 +645,7 @@ module storage 'core/storage/storage-account.bicep' = {
   }
 }
 
+// original code //
 module userStorage 'core/storage/storage-account.bicep' = if (useUserUpload) {
   name: 'user-storage'
   scope: storageResourceGroup
@@ -670,6 +671,43 @@ module userStorage 'core/storage/storage-account.bicep' = if (useUserUpload) {
     ]
   }
 }
+
+
+
+// // Resolve the storage account name
+// var resolvedStorageAccountName = !empty(userStorageAccountName)
+//   ? userStorageAccountName
+//   : 'user${abbrs.storageStorageAccounts}${resourceToken}'
+
+// // Reference an existing storage account (if it exists)
+// resource existingUserStorageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' existing = {
+//   name: resolvedStorageAccountName
+// }
+
+// // Only deploy the storage account module if it doesn't already exist
+// module userStorage 'core/storage/storage-account.bicep' = if (useUserUpload && existingUserStorageAccount == null) {
+//   name: 'user-storage'
+//   scope: az.resourceGroup(storageResourceGroupName)
+//   params: {
+//     name: resolvedStorageAccountName
+//     location: storageResourceGroupLocation
+//     tags: tags
+//     publicNetworkAccess: publicNetworkAccess
+//     bypass: bypass
+//     allowBlobPublicAccess: false
+//     allowSharedKeyAccess: false
+//     isHnsEnabled: true
+//     sku: {
+//       name: storageSkuName
+//     }
+//     containers: [
+//       {
+//         name: userStorageContainerName
+//         publicAccess: 'None'
+//       }
+//     ]
+//   }
+// }
 
 // USER ROLES
 var principalType = empty(runningOnGh) && empty(runningOnAdo) ? 'User' : 'ServicePrincipal'
