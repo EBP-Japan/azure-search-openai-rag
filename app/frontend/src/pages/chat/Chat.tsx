@@ -442,6 +442,7 @@ const Chat = () => {
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
                             showSpeechInput={showSpeechInput}
+                            maxLength={6500}
                         />
                     </div>
                 </div>

@@ -127,6 +127,7 @@ class ChatReadRetrieveReadVisionApproach(ChatApproach):
             messages=query_messages,
             temperature=0.0,  # Minimize creativity for search query generation
             max_tokens=query_response_token_limit,
+            # max_completion_tokens = query_response_token_limit, # o3-mini
             n=1,
             seed=seed,
         )

@@ -114,6 +114,8 @@ param chatGptDeploymentVersion string = ''
 param chatGptDeploymentSkuName string = ''
 param chatGptDeploymentCapacity int = 0
 
+
+// GPR-3.5Turbo-16K
 var chatGpt = {
   modelName: !empty(chatGptModelName)
     ? chatGptModelName
@@ -123,6 +125,17 @@ var chatGpt = {
   deploymentSkuName: !empty(chatGptDeploymentSkuName) ? chatGptDeploymentSkuName : 'Standard'
   deploymentCapacity: chatGptDeploymentCapacity != 0 ? chatGptDeploymentCapacity : 30
 }
+
+// // o3-mini 
+// var chatGpt = {
+//   modelName: !empty(chatGptModelName)
+//     ? chatGptModelName
+//     : startsWith(openAiHost, 'azure') ? 'o3-mini' : 'o3-mini'
+//   deploymentName: !empty(chatGptDeploymentName) ? chatGptDeploymentName : 'chat'
+//   deploymentVersion: !empty(chatGptDeploymentVersion) ? chatGptDeploymentVersion : '2025-01-31'
+//   deploymentSkuName: !empty(chatGptDeploymentSkuName) ? chatGptDeploymentSkuName : 'Standard'
+//   deploymentCapacity: chatGptDeploymentCapacity != 0 ? chatGptDeploymentCapacity : 30
+// }
 
 param embeddingModelName string = ''
 param embeddingDeploymentName string = ''

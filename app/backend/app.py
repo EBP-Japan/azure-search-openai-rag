@@ -340,6 +340,11 @@ async def speech():
 @bp.post("/upload")
 @authenticated
 async def upload(auth_claims: dict[str, Any]):
+    # Debugging
+    current_app.logger.info("Auth Claims: %s", auth_claims)  
+    if "oid" not in auth_claims:
+        return jsonify({"message": "OID missing in auth claims", "status": "failed"}), 401
+
     request_files = await request.files
     if "file" not in request_files:
         # If no files were included in the request, return an error response

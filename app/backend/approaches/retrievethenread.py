@@ -131,14 +131,15 @@ class RetrieveThenReadApproach(Approach):
             new_user_content=user_content,
             max_tokens=self.chatgpt_token_limit - response_token_limit,
             fallback_to_default=self.ALLOW_NON_GPT_MODELS,
-        )
-
+        ) 
+        response_token_limit = 10000 # for output max by Hagi-san, original is 1024 
         chat_completion = await self.openai_client.chat.completions.create(
             # Azure OpenAI takes the deployment name as the model name
             model=self.chatgpt_deployment if self.chatgpt_deployment else self.chatgpt_model,
             messages=updated_messages,
             temperature=overrides.get("temperature", 0.3),
             max_tokens=response_token_limit,
+            # max_completion_tokens = response_token_limit, #o3-mini
             n=1,
             seed=seed,
         )

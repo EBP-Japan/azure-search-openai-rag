@@ -16,9 +16,10 @@ interface Props {
     placeholder?: string;
     clearOnSend?: boolean;
     showSpeechInput?: boolean;
+    maxLength?: number;
 }
 
-export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, initQuestion, showSpeechInput }: Props) => {
+export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, initQuestion, showSpeechInput, maxLength = 6500 }: Props) => {
     const [question, setQuestion] = useState<string>("");
     const { loggedIn } = useContext(LoginContext);
     const { t } = useTranslation();
@@ -59,7 +60,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, init
     const onQuestionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
         if (!newValue) {
             setQuestion("");
-        } else if (newValue.length <= 1000) {
+        } else if (newValue.length <= maxLength) {
             setQuestion(newValue);
         }
     };
@@ -85,6 +86,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, init
                 onKeyDown={onEnterPress}
                 onCompositionStart={handleCompositionStart}
                 onCompositionEnd={handleCompositionEnd}
+                maxLength={maxLength}
             />
             <div className={styles.questionInputButtonsContainer}>
                 <Tooltip content={t("tooltips.submitQuestion")} relationship="label">

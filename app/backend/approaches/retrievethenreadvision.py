@@ -147,6 +147,7 @@ class RetrieveThenReadVisionApproach(Approach):
             messages=updated_messages,
             temperature=overrides.get("temperature", 0.3),
             max_tokens=response_token_limit,
+            # max_completion_tokens = response_token_limit,  #o3-mini
             n=1,
             seed=seed,
         )
