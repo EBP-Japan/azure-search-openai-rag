@@ -28,14 +28,15 @@ Write-Host ""
 Write-Host "Restoring backend python packages"
 Write-Host ""
 
-$directory = Get-Location
-$venvPythonPath = "$directory/.venv/scripts/python.exe"
+# $directory = Get-Location
+$directory = "D:\EBP\github\CHATBOT\test_OpenAI\azure-search-openai-rag\"
+$venvPythonPath = "$directory\.venv\Scripts\python.exe"
 if (Test-Path -Path "/usr") {
   # fallback to Linux venv path
   $venvPythonPath = "$directory/.venv/bin/python"
 }
 
-Start-Process -FilePath $venvPythonPath -ArgumentList "-m pip install -r backend/requirements.txt" -Wait -NoNewWindow
+Start-Process -FilePath $venvPythonPath -ArgumentList "-m pip install -r backend\requirements.txt" -Wait -NoNewWindow
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Failed to restore backend python packages"
     exit $LASTEXITCODE
