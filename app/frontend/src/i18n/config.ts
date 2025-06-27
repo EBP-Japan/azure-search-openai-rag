@@ -12,6 +12,7 @@ import nlTranslation from "../locales/nl/translation.json";
 import ptBRTranslation from "../locales/ptBR/translation.json";
 import trTranslation from "../locales/tr/translation.json";
 import itTranslation from "../locales/it/translation.json";
+import mmTranslation from "../locales/my/translation.json";
 
 export const supportedLngs: { [key: string]: { name: string; locale: string } } = {
     da: {
@@ -49,6 +50,11 @@ export const supportedLngs: { [key: string]: { name: string; locale: string } } 
     it: {
         name: "Italiano",
         locale: "it-IT"
+    },
+    my: {
+        name: "မြန်မာ",
+        locale: "my-MM"
+        // locale: "my" // No specific locale code for Burmese, using "my"
     }
 };
 
@@ -68,7 +74,8 @@ i18next
             nl: { translation: nlTranslation },
             ptBR: { translation: ptBRTranslation },
             tr: { translation: trTranslation },
-            it: { translation: itTranslation }
+            it: { translation: itTranslation },
+            my: { translation: mmTranslation }
         },
         fallbackLng: "en",
         supportedLngs: Object.keys(supportedLngs),
