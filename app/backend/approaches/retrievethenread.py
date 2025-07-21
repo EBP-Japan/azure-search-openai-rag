@@ -60,7 +60,8 @@ class RetrieveThenReadApproach(Approach):
         self.query_language = query_language
         self.query_speller = query_speller
         self.prompt_manager = prompt_manager
-        self.answer_prompt = self.prompt_manager.load_prompt("ask_answer_question.prompty")
+        # self.answer_prompt = self.prompt_manager.load_prompt("ask_answer_question.prompty")
+        self.answer_prompt = self.prompt_manager.load_prompt("ask_nra_qa_jp.prompty") 
         self.reasoning_effort = reasoning_effort
         self.include_token_usage = True
 
