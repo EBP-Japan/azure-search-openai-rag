@@ -47,7 +47,9 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host ""
 Write-Host "Restoring frontend npm packages"
 Write-Host ""
+Write-Host Get-Location
 Set-Location ./frontend
+Write-Host Get-Location
 npm install
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Failed to restore frontend npm packages"
@@ -67,7 +69,7 @@ Write-Host ""
 Write-Host "Starting backend"
 Write-Host ""
 Set-Location ../backend
-
+Write-Host Get-Location
 $port = 50505
 $hostname = "localhost"
 Start-Process -FilePath $venvPythonPath -ArgumentList "-m quart --app main:app run --port $port --host $hostname --reload" -Wait -NoNewWindow

@@ -90,6 +90,12 @@ export const UploadFile: React.FC<Props> = ({ className, disabled }: Props) => {
             if (!idToken) {
                 throw new Error("No authentication token available");
             }
+            
+            // Add a hidden field to indicate this is from the ASK UI page
+            if (window.location.pathname.includes('/ask')) {
+                formData.append("source", "ask_ui");
+            }
+            
             const response: SimpleAPIResponse = await uploadFileApi(formData, idToken);
             setUploadedFile(response);
             setIsUploading(false);

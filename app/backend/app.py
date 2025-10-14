@@ -72,6 +72,7 @@ from config import (
     CONFIG_DEFAULT_REASONING_EFFORT,
     CONFIG_GPT4V_DEPLOYED,
     CONFIG_INGESTER,
+    CONFIG_QA_INGESTER,
     CONFIG_LANGUAGE_PICKER_ENABLED,
     CONFIG_OPENAI_CLIENT,
     CONFIG_QUERY_REWRITING_ENABLED,
@@ -101,6 +102,7 @@ from prepdocs import (
     setup_search_info,
 )
 from prepdocslib.filestrategy import UploadUserFileStrategy
+from prepdocslib.qaindexstrategy import QAIndexStrategy
 from prepdocslib.listfilestrategy import File
 
 bp = Blueprint("routes", __name__, static_folder="static")
@@ -112,6 +114,10 @@ mimetypes.add_type("text/css", ".css")
 @bp.route("/")
 async def index():
     return await bp.send_static_file("index.html")
+
+@bp.route("/qa")
+async def qa_upload():
+    return await bp.send_static_file("qa_upload.html")
 
 
 # Empty page is recommended for login redirect to work.
@@ -312,8 +318,66 @@ def config():
             "showChatHistoryBrowser": current_app.config[CONFIG_CHAT_HISTORY_BROWSER_ENABLED],
             "showChatHistoryCosmos": current_app.config[CONFIG_CHAT_HISTORY_COSMOS_ENABLED],
             "showAgenticRetrievalOption": current_app.config[CONFIG_AGENTIC_RETRIEVAL_ENABLED],
+            # "qaIndexName": AZURE_SEARCH_QA_INDEX,
         }
     )
+
+@bp.route("/search_qa", methods=["POST"])
+@authenticated
+async def search_qa(auth_claims: dict[str, Any]):
+    """Search a specific Q&A index"""
+    AZURE_SEARCH_QA_INDEX = os.environ["AZURE_SEARCH_QA_INDEX"]
+    AZURE_SEARCH_SERVICE = os.environ["AZURE_SEARCH_SERVICE"]
+    if not request.is_json:
+        return jsonify({"error": "request must be json"}), 415
+    
+    request_json = await request.get_json()
+    query = request_json.get("query")
+    index_name = request_json.get("index_name", AZURE_SEARCH_QA_INDEX)
+    top = request_json.get("top", 3)
+    
+    if not query:
+        return jsonify({"error": "query is required"}), 400
+    
+    try:
+        # Create a search client for the specified index
+        search_client = SearchClient(
+            endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
+            index_name=index_name,
+            credential=current_app.config[CONFIG_CREDENTIAL],
+        )
+        
+        # Perform the search
+        results = await search_client.search(
+            search_text=query,
+            top=top,
+            query_type="semantic",
+            semantic_configuration_name="default",
+            query_caption="extractive",
+            query_answer="extractive",
+            include_total_count=True
+        )
+        
+        # Format the results
+        formatted_results = []
+        async for result in results:
+            formatted_result = {
+                "content": result["content"],
+                "score": result["@search.score"],
+            }
+            if "@search.captions" in result:
+                formatted_result["captions"] = result["@search.captions"]
+            if "@search.answers" in result:
+                formatted_result["answers"] = result["@search.answers"]
+            formatted_results.append(formatted_result)
+        
+        return jsonify({
+            "results": formatted_results,
+            "count": await results.get_count()
+        }), 200
+    except Exception as e:
+        current_app.logger.exception("Error searching Q&A index", e)
+        return jsonify({"message": str(e), "status": "failed"}), 500
 
 
 @bp.route("/speech", methods=["POST"])
@@ -364,6 +428,7 @@ async def speech():
 @authenticated
 async def upload(auth_claims: dict[str, Any]):
     request_files = await request.files
+    request_form = await request.form
     if "file" not in request_files:
         # If no files were included in the request, return an error response
         return jsonify({"message": "No file part in the request", "status": "failed"}), 400
@@ -384,9 +449,104 @@ async def upload(auth_claims: dict[str, Any]):
     file_io = io.BufferedReader(file_io)
     await file_client.upload_data(file_io, overwrite=True, metadata={"UploadedBy": user_oid})
     file_io.seek(0)
-    ingester: UploadUserFileStrategy = current_app.config[CONFIG_INGESTER]
-    await ingester.add_file(File(content=file_io, acls={"oids": [user_oid]}, url=file_client.url))
+    
+    # Check if this is an upload from the ASK UI page
+    is_ask_ui = request_form.get("source") == "ask_ui"
+    
+    if is_ask_ui and file.filename.lower().endswith(".csv"):
+        # For ASK UI uploads of CSV files, use the QA index
+        qa_index_name = os.environ.get("AZURE_SEARCH_QA_INDEX", "gptkbindex_qa")
+        
+        # Create a search info object for the QA index
+        qa_search_info = SearchInfo(
+            endpoint=f"https://{os.environ['AZURE_SEARCH_SERVICE']}.search.windows.net/",
+            credential=current_app.config[CONFIG_CREDENTIAL],
+            index_name=qa_index_name,
+            semantic_config_name="default"
+        )
+        
+        # Create a search manager for the QA index
+        qa_search_manager = SearchManager(
+            search_info=qa_search_info,
+            search_analyzer_name=None,
+            use_acls=True,
+            use_int_vectorization=False,
+            embeddings=current_app.config[CONFIG_INGESTER].embeddings,
+            field_name_embedding=os.environ.get("AZURE_SEARCH_FIELD_NAME_EMBEDDING", "embedding"),
+            search_images=False,
+        )
+        
+        # Create the QA index if it doesn't exist
+        await qa_search_manager.create_index()
+        
+        # Process the file using the same file processors as the regular ingester
+        file_processors = current_app.config[CONFIG_INGESTER].file_processors
+        sections = await parse_file(File(content=file_io, acls={"oids": [user_oid]}, url=file_client.url), file_processors)
+        
+        if sections:
+            # Upload to the QA index
+            await qa_search_manager.update_content(sections, url=file_client.url)
+            return jsonify({"message": f"File uploaded successfully to Q&A index '{qa_index_name}'"}), 200
+    else:
+        # For regular uploads, use the default index
+        ingester: UploadUserFileStrategy = current_app.config[CONFIG_INGESTER]
+        await ingester.add_file(File(content=file_io, acls={"oids": [user_oid]}, url=file_client.url))
+    
     return jsonify({"message": "File uploaded successfully"}), 200
+
+@bp.post("/upload_qa")
+@authenticated
+async def upload_qa(auth_claims: dict[str, Any]):
+    request_files = await request.files
+    request_form = await request.form
+    
+    AZURE_SEARCH_QA_INDEX = os.environ["AZURE_SEARCH_QA_INDEX"]
+    if "file" not in request_files:
+        return jsonify({"message": "No file part in the request", "status": "failed"}), 400
+    
+    # Get the index name from the form or use default
+    index_name = request_form.get("index_name", AZURE_SEARCH_QA_INDEX)
+    
+    user_oid = auth_claims["oid"]
+    file = request_files.getlist("file")[0]
+    
+    # Check if the file is a CSV
+    if not file.filename.lower().endswith(".csv"):
+        return jsonify({"message": "Only CSV files are supported for Q&A upload", "status": "failed"}), 400
+    
+    # Upload the file to blob storage
+    user_blob_container_client: FileSystemClient = current_app.config[CONFIG_USER_BLOB_CONTAINER_CLIENT]
+    user_directory_client = user_blob_container_client.get_directory_client(user_oid)
+    try:
+        await user_directory_client.get_directory_properties()
+    except ResourceNotFoundError:
+        current_app.logger.info("Creating directory for user %s", user_oid)
+        await user_directory_client.create_directory()
+    await user_directory_client.set_access_control(owner=user_oid)
+    
+    # Add a .qcsv extension to indicate it's a Q&A CSV file
+    qa_filename = file.filename.replace(".csv", ".qcsv")
+    file_client = user_directory_client.get_file_client(qa_filename)
+    file_io = file
+    file_io.name = qa_filename
+    file_io = io.BufferedReader(file_io)
+    await file_client.upload_data(file_io, overwrite=True, metadata={"UploadedBy": user_oid})
+    file_io.seek(0)
+    
+    # Process the file and add it to the Q&A index
+    qa_ingester: QAIndexStrategy = current_app.config[CONFIG_QA_INGESTER]
+    success = await qa_ingester.add_qa_file(
+        File(content=file_io, acls={"oids": [user_oid]}, url=file_client.url),
+        index_name
+    )
+    
+    if success:
+        return jsonify({
+            "message": f"Q&A file uploaded successfully to index '{index_name}'",
+            "index_name": index_name
+        }), 200
+    else:
+        return jsonify({"message": "Failed to process Q&A file", "status": "failed"}), 500
 
 
 @bp.post("/delete_uploaded")
@@ -419,6 +579,31 @@ async def list_uploaded(auth_claims: dict[str, Any]):
             current_app.logger.exception("Error listing uploaded files", error)
     return jsonify(files), 200
 
+@bp.get("/list_qa_indexes")
+@authenticated
+async def list_qa_indexes(auth_claims: dict[str, Any]):
+    """List all Q&A indexes available to the user"""
+    try:
+        AZURE_SEARCH_SERVICE = os.environ["AZURE_SEARCH_SERVICE"]
+        AZURE_SEARCH_QA_INDEX = os.environ["AZURE_SEARCH_QA_INDEX"]
+        async with SearchIndexClient(
+            endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
+            credential=current_app.config[CONFIG_CREDENTIAL],
+        ) as search_index_client:
+            indexes = []
+            async for index in search_index_client.list_indexes():
+                # Only include indexes that start with the Q&A prefix or match the default Q&A index
+                if index.name.startswith("qa-") or index.name == AZURE_SEARCH_QA_INDEX:
+                    indexes.append({
+                        "name": index.name,
+                        "created": index.created.isoformat() if index.created else None,
+                        "modified": index.last_modified.isoformat() if index.last_modified else None
+                    })
+            return jsonify(indexes), 200
+    except Exception as e:
+        current_app.logger.exception("Error listing Q&A indexes", e)
+        return jsonify({"message": str(e), "status": "failed"}), 500
+
 
 @bp.before_app_serving
 async def setup_clients():
@@ -430,6 +615,8 @@ async def setup_clients():
     AZURE_SEARCH_SERVICE = os.environ["AZURE_SEARCH_SERVICE"]
     AZURE_SEARCH_ENDPOINT = f"https://{AZURE_SEARCH_SERVICE}.search.windows.net"
     AZURE_SEARCH_INDEX = os.environ["AZURE_SEARCH_INDEX"]
+    # AZURE_SEARCH_QA_INDEX = os.getenv("AZURE_SEARCH_QA_INDEX", "azure-search-openai-qa")
+    AZURE_SEARCH_QA_INDEX = os.environ["AZURE_SEARCH_QA_INDEX"]
     AZURE_SEARCH_AGENT = os.getenv("AZURE_SEARCH_AGENT", "")
     # Shared by all OpenAI deployments
     OPENAI_HOST = os.getenv("OPENAI_HOST", "azure")
@@ -600,6 +787,15 @@ async def setup_clients():
             search_field_name_embedding=AZURE_SEARCH_FIELD_NAME_EMBEDDING,
         )
         current_app.config[CONFIG_INGESTER] = ingester
+        
+        # Set up QA index strategy
+        qa_ingester = QAIndexStrategy(
+            search_info=search_info,
+            file_processors=file_processors,
+            embeddings=text_embeddings_service,
+            search_field_name_embedding=AZURE_SEARCH_FIELD_NAME_EMBEDDING,
+        )
+        current_app.config[CONFIG_QA_INGESTER] = qa_ingester
 
     # Used by the OpenAI SDK
     openai_client: AsyncOpenAI
@@ -689,7 +885,7 @@ async def setup_clients():
     # RetrieveThenReadApproach is used by /ask for single-turn Q&A
     current_app.config[CONFIG_ASK_APPROACH] = RetrieveThenReadApproach(
         search_client=search_client,
-        search_index_name=AZURE_SEARCH_INDEX,
+        search_index_name=AZURE_SEARCH_QA_INDEX,
         agent_model=AZURE_OPENAI_SEARCHAGENT_MODEL,
         agent_deployment=AZURE_OPENAI_SEARCHAGENT_DEPLOYMENT,
         agent_client=agent_client,

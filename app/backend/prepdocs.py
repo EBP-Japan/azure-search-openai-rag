@@ -12,6 +12,7 @@ from rich.logging import RichHandler
 from load_azd_env import load_azd_env
 from prepdocslib.blobmanager import BlobManager
 from prepdocslib.csvparser import CsvParser
+from prepdocslib.qacsvparser import QACsvParser
 from prepdocslib.embeddings import (
     AzureOpenAIEmbeddingService,
     ImageEmbeddings,
@@ -216,6 +217,7 @@ def setup_file_processors(
         ".md": FileProcessor(TextParser(), sentence_text_splitter),
         ".txt": FileProcessor(TextParser(), sentence_text_splitter),
         ".csv": FileProcessor(CsvParser(), sentence_text_splitter),
+        ".qcsv": FileProcessor(QACsvParser(), sentence_text_splitter),  # Special extension for Q&A CSV files
     }
     # These require either a Python package or Document Intelligence
     if pdf_parser is not None:

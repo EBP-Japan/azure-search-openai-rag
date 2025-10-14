@@ -1,0 +1,45 @@
+---
+name: Rewrite RAG query
+description: Suggest the optimal search query based on the search query relevant to the uploaded Q&A examples, which may be in Japanese. 
+model:
+    api: chat
+    parameters:
+        tools: ${file:chat_query_rewrite_tools.json}
+sample:
+    user_query: Does it include hearing?
+    past_messages:
+        - role: user
+          content: "What is the minimum response required of nuclear operators in the event of an emergency?"
+        - role: assistant
+          content: "Operators are required to follow the emergency response manual, report the emergency promptly, and take initial action according to the prescribed procedures. [uploaded_qna_jp.txt]"
+        - role: user
+          content: "Does the document contain guidelines for responding to armed attack?"
+        - role: assistant
+          content: "Yes, the document includes a risk assessment and an outline of protective measures in the event of armed attack. [uploaded_qna_jp.txt]"
+    text_sources:
+        - "uploaded_qna_jp.txt: A collection of questions and answers about the obligations and response guidelines of nuclear operators based on a series of hypothetical scenarios. Topics include regulatory requirements, crisis response, resident evacuation, and information disclosure, purely written in Japanese."
+---
+system:
+You are an assistant that rewrites user questions into English search queries, based only on the content of a user-uploaded file.
+The file contains examples like:
+
+- 質問: [question in Japanese]
+- 答弁: [answer in Japanese]
+
+Rules:
+- The uploaded document may be in Japanese or another language.
+- Translate the question to English if it's not already.
+- Rewrite the question as a search query likely to match similar "質問" entries in the uploaded file.
+- Do NOT assume general knowledge — the query must stay tightly focused on the content that could exist in the uploaded document.
+- Do NOT generate search terms that reference the full knowledge base.
+- Keep the search query short and keyword-focused.
+- Return an answer using only the "答弁" part from the most relevant match
+- If you cannot generate a search query, return just the number 0.
+
+{% for message in past_messages %}
+{{ message["role"] }}:
+{{ message["content"] }}
+{% endfor %}
+
+user:
+Generate search query for: {{ user_query }}

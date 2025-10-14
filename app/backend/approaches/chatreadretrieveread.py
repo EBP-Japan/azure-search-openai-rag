@@ -69,6 +69,9 @@ class ChatReadRetrieveReadApproach(ChatApproach):
         self.query_rewrite_prompt = self.prompt_manager.load_prompt("chat_query_rewrite.prompty")
         self.query_rewrite_tools = self.prompt_manager.load_tools("chat_query_rewrite_tools.json")
         self.answer_prompt = self.prompt_manager.load_prompt("chat_answer_question.prompty")
+        # self.query_rewrite_prompt = self.prompt_manager.load_prompt("chat_nra_rewrite.prompty")
+        # self.query_rewrite_tools = self.prompt_manager.load_tools("chat_nra_rewrite_tool.json")
+        # self.answer_prompt = self.prompt_manager.load_prompt("chat_nra_qa.prompty")
         self.reasoning_effort = reasoning_effort
         self.include_token_usage = True
 
@@ -162,7 +165,8 @@ class ChatReadRetrieveReadApproach(ChatApproach):
                 ),  # Setting too low risks malformed JSON, setting too high may affect performance
                 temperature=0.0,  # Minimize creativity for search query generation
                 tools=tools,
-                reasoning_effort="low",  # Minimize reasoning for search query generation
+                # reasoning_effort="low",  # Minimize reasoning for search query generation
+                reasoning_effort="medium"
             ),
         )
 
@@ -202,7 +206,8 @@ class ChatReadRetrieveReadApproach(ChatApproach):
                     model=self.chatgpt_model,
                     deployment=self.chatgpt_deployment,
                     usage=chat_completion.usage,
-                    reasoning_effort="low",
+                    # reasoning_effort="low",
+                    reasoning_effort="medium"
                 ),
                 ThoughtStep(
                     "Search using generated search query",
